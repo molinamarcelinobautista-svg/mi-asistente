@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asistente de Marce</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f0f0f; --bg2:#1a1a1a; --bg3:#222;
+    --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.15);
+    --text:#f0ede8; --text2:#999; --text3:#555;
+    --teal:#1D9E75; --teal-dark:#0a5c43; --radius:14px; --radius-sm:8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  .panel { max-width:700px; margin:0 auto; padding:1.5rem 1rem 3rem; display:flex; flex-direction:column; gap:1rem; }
+  .greeting-bar { display:flex; align-items:center; justify-content:space-between; background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.4rem; }
+  .greeting-name { font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+  .greeting-sub { font-size:12px; color:var(--text2); margin-top:3px; }
+  .datetime-box { text-align:right; }
+  .time-display { font-family:'Space Mono',monospace; font-size:22px; font-weight:700; letter-spacing:1px; }
+  .date-display { font-size:11px; color:var(--text2); margin-top:2px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+  .card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; }
+  .card-label { font-size:10px; text-transform:uppercase; letter-spacing:2px; color:var(--text3); margin-bottom:10px; font-weight:700; }
+  .weather-main { font-size:32px; font-weight:800; line-height:1; }
+  .weather-desc { font-size:12px; color:var(--text2); margin-top:5px; }
+  .reminders-list { list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .reminder-item { display:flex; align-items:center; gap:9px; font-size:13px; cursor:pointer; transition:opacity 0.2s; }
+  .reminder-item:hover { opacity:0.5; text-decoration:line-through; }
+  .reminder-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .dot-a{background:#1D9E75;} .dot-b{background:#378ADD;} .dot-c{background:#D85A30;} .dot-d{background:#9B59B6;}
+  .add-reminder { display:flex; gap:6px; margin-top:10px; }
+  .add-reminder input { flex:1; font-size:12px; padding:6px 10px; border:0.5px solid var(--border2); border-radius:7px; background:var(--bg3); color:var(--text); font-family:'Syne',sans-serif; outline:none; }
+  .add-reminder input:focus { border-color:var(--teal); }
+  .add-reminder button { font-size:13px; padding:5px 12px; border:0.5px solid var(--border2); border-radius:7px; background:transparent; color:var(--text); cursor:pointer; font-family:'Syne',sans-serif; font-weight:700; }
+  .add-reminder button:hover { background:var(--bg3); }
+  .apps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:6px; }
+  .app-btn { display:flex; flex-direction:column; align-items:center; gap:5px; padding:11px 4px 9px; border:0.5px solid var(--border); border-radius:var(--radius-sm); background:var(--bg3); font-size:10px; color:var(--text2); font-family:'Syne',sans-serif; text-align:center; text-decoration:none; transition:all 0.15s; }
+  .app-btn:hover { background:#2a2a2a; color:var(--text); border-color:var(--border2); }
+  .app-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .ai-chat-section { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; }
+  .chat-messages { display:flex; flex-direction:column; gap:9px; min-height:90px; max-height:240px; overflow-y:auto; margin-bottom:12px; }
+  .msg { padding:9px 13px; border-radius:13px; font-size:13px; line-height:1.55; max-width:88%; }
+  .msg-ai { background:var(--bg3); border:0.5px solid var(--border); align-self:flex-start; }
+  .msg-user { background:var(--teal); color:#d4f5e9; align-self:flex-end; }
+  .chat-input-row { display:flex; gap:6px; }
+  .chat-input { flex:1; font-size:13px; padding:9px 13px; border:0.5px solid var(--border2); border-radius:11px; background:var(--bg3); color:var(--text); font-family:'Syne',sans-serif; outline:none; }
+  .chat-input:focus { border-color:var(--teal); }
+  .chat-send { padding:9px 15px; border:0.5px solid var(--border2); border-radius:11px; background:transparent; color:var(--text); font-size:13px; cursor:pointer; font-family:'Syne',sans-serif; font-weight:700; }
+  .chat-send:hover { background:var(--bg3); }
+  .chat-send:disabled,.mic-btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .mic-btn { padding:9px 13px; border:0.5px solid var(--border2); border-radius:11px; background:transparent; color:var(--text); font-size:17px; cursor:pointer; transition:all 0.15s; }
+  .mic-btn.listening { background:#3a1010; border-color:#c0392b; animation:pulse 1s infinite; }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  .voice-status { font-size:11px; color:var(--text3); margin-top:7px; min-height:16px; text-align:center; font-family:'Space Mono',monospace; }
+  .ideas-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .chip { font-size:11px; padding:5px 11px; border:0.5px solid var(--border); border-radius:20px; background:var(--bg3); cursor:pointer; color:var(--text2); font-family:'Syne',sans-serif; transition:all 0.15s; }
+  .chip:hover { border-color:var(--teal); color:var(--text); }
+  .install-bar { display:none; align-items:center; justify-content:space-between; background:var(--teal-dark); border:0.5px solid var(--teal); border-radius:var(--radius-sm); padding:10px 14px; font-size:12px; }
+  .install-bar.visible { display:flex; }
+  .install-btn { font-size:11px; padding:5px 12px; border:none; border-radius:6px; background:var(--teal); color:white; cursor:pointer; font-family:'Syne',sans-serif; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="install-bar" id="install-bar">
+    <span>Instala el asistente como app en Chrome</span>
+    <button class="install-btn" id="install-btn">Instalar app</button>
+  </div>
+  <div class="greeting-bar">
+    <div>
+      <div class="greeting-name" id="greeting-text">Hola, Marce</div>
+      <div class="greeting-sub">Ing. Sistemas Computacionales &bull; Lista para arrancar</div>
+    </div>
+    <div class="datetime-box">
+      <div class="time-display" id="clock">--:--</div>
+      <div class="date-display" id="date-display">--</div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label">Clima — Teziutlán</div>
+      <div class="weather-main" id="weather-temp">...</div>
+      <div class="weather-desc" id="weather-desc">cargando</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Recordatorios</div>
+      <ul class="reminders-list" id="reminders-list">
+        <li class="reminder-item" onclick="this.remove()"><span class="reminder-dot dot-a"></span><span>Estudiar para examen</span></li>
+        <li class="reminder-item" onclick="this.remove()"><span class="reminder-dot dot-b"></span><span>Entregar práctica</span></li>
+        <li class="reminder-item" onclick="this.remove()"><span class="reminder-dot dot-c"></span><span>Reunión de equipo</span></li>
+      </ul>
+      <div class="add-reminder">
+        <input type="text" id="reminder-input" placeholder="Nuevo recordatorio..." onkeydown="if(event.key==='Enter')addReminder()" />
+        <button onclick="addReminder()">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Apps rápidas</div>
+    <div class="apps-grid">
+      <a class="app-btn" href="https://github.com" target="_blank"><div class="app-icon" style="background:#1a1a1a;color:#f0ede8;border:1px solid #333;font-size:12px;font-weight:700;">GH</div>GitHub</a>
+      <a class="app-btn" href="https://mail.google.com" target="_blank"><div class="app-icon" style="background:#2d1a15;color:#E2725B;">✉</div>Gmail</a>
+      <a class="app-btn" href="https://notion.so" target="_blank"><div class="app-icon" style="background:#1e1e1e;color:#f0ede8;font-weight:800;font-size:16px;border:1px solid #333;">N</div>Notion</a>
+      <a class="app-btn" href="https://youtube.com" target="_blank"><div class="app-icon" style="background:#2a1010;color:#e74c3c;">▶</div>YouTube</a>
+      <a class="app-btn" href="https://classroom.google.com" target="_blank"><div class="app-icon" style="background:#1a2a15;color:#27ae60;">✎</div>Classroom</a>
+      <a class="app-btn" href="https://drive.google.com" target="_blank"><div class="app-icon" style="background:#152030;color:#3498db;">△</div>Drive</a>
+      <a class="app-btn" href="https://open.spotify.com" target="_blank"><div class="app-icon" style="background:#0d2010;color:#1db954;">♫</div>Spotify</a>
+      <a class="app-btn" href="https://discord.com/app" target="_blank"><div class="app-icon" style="background:#1a1a2e;color:#7289da;">⊞</div>Discord</a>
+    </div>
+  </div>
+  <div class="ai-chat-section">
+    <div class="card-label">Asistente IA — habla o escribe</div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg msg-ai">Hola Marce! Puedes escribirme o presionar el micrófono para hablarme. Te escucho y respondo con voz también.</div>
+    </div>
+    <div class="chat-input-row">
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Hablar">🎤</button>
+      <input class="chat-input" id="chat-input" type="text" placeholder="Escribe o usa el micrófono..." onkeydown="if(event.key==='Enter')sendChat()" />
+      <button class="chat-send" id="send-btn" onclick="sendChat()">Enviar ↗</button>
+    </div>
+    <div class="voice-status" id="voice-status"></div>
+    <div class="ideas-chips">
+      <span class="chip" onclick="setPrompt('Dame una idea para mi proyecto de programación')">💡 Idea proyecto</span>
+      <span class="chip" onclick="setPrompt('Qué debería aprender esta semana en sistemas')">📚 Qué estudiar</span>
+      <span class="chip" onclick="setPrompt('Dame motivación para estudiar hoy')">⚡ Motivación</span>
+      <span class="chip" onclick="setPrompt('Platícame algo interesante de tecnología')">🔬 Dato tech</span>
+    </div>
+  </div>
+</div>
+<script>
+let recognition=null,isListening=false,isSpeaking=false,dotIdx=0,deferredPrompt=null;
+const dotColors=['dot-a','dot-b','dot-c','dot-d'];
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-bar').classList.add('visible');});
+document.getElementById('install-btn').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')document.getElementById('install-bar').classList.remove('visible');deferredPrompt=null;};
+function updateClock(){const now=new Date();document.getElementById('clock').textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];document.getElementById('date-display').textContent=days[now.getDay()]+' '+now.getDate()+' '+months[now.getMonth()];const hr=now.getHours();document.getElementById('greeting-text').textContent=(hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches')+', Marce';}
+updateClock();setInterval(updateClock,30000);
+async function fetchWeather(){try{const res=await fetch('https://api.open-meteo.com/v1/forecast?latitude=19.82&longitude=-97.36&current_weather=true&temperature_unit=celsius');const data=await res.json();const descs={0:'Despejado',1:'Casi despejado',2:'Parcialmente nublado',3:'Nublado',45:'Neblina',51:'Llovizna ligera',61:'Lluvia ligera',63:'Lluvia',65:'Lluvia intensa',80:'Chubascos',95:'Tormenta'};document.getElementById('weather-temp').textContent=Math.round(data.current_weather.temperature)+'°C';document.getElementById('weather-desc').textContent=(descs[data.current_weather.weathercode]||'Variable')+' en Teziutlán';}catch(e){document.getElementById('weather-temp').textContent='--°C';document.getElementById('weather-desc').textContent='Sin conexión';}}
+fetchWeather();
+function addReminder(){const input=document.getElementById('reminder-input');const text=input.value.trim();if(!text)return;const li=document.createElement('li');li.className='reminder-item';li.innerHTML=`<span class="reminder-dot ${dotColors[dotIdx++%4]}"></span><span>${text}</span>`;li.onclick=()=>li.remove();document.getElementById('reminders-list').appendChild(li);input.value='';}
+function setPrompt(text){document.getElementById('chat-input').value=text;document.getElementById('chat-input').focus();}
+function setStatus(msg){document.getElementById('voice-status').textContent=msg;}
+function speak(text){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const utt=new SpeechSynthesisUtterance(text);utt.lang='es-MX';utt.rate=1.05;utt.pitch=1.1;const voices=window.speechSynthesis.getVoices();const v=voices.find(v=>v.lang.startsWith('es')&&v.name.toLowerCase().includes('female'))||voices.find(v=>v.lang.startsWith('es'));if(v)utt.voice=v;isSpeaking=true;setStatus('Hablando...');utt.onend=()=>{isSpeaking=false;setStatus('');};utt.onerror=()=>{isSpeaking=false;setStatus('');};window.speechSynthesis.speak(utt);}
+function setupRecognition(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;const r=new SR();r.lang='es-MX';r.continuous=false;r.interimResults=true;r.onstart=()=>setStatus('Escuchando... habla ahora');r.onresult=e=>{let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}document.getElementById('chat-input').value=final||interim;};r.onend=()=>{isListening=false;document.getElementById('mic-btn').classList.remove('listening');document.getElementById('mic-btn').textContent='🎤';const text=document.getElementById('chat-input').value.trim();if(text){setStatus('Procesando...');sendChat();}else setStatus('No escuché nada. Intenta de nuevo.');};r.onerror=e=>{isListening=false;document.getElementById('mic-btn').classList.remove('listening');document.getElementById('mic-btn').textContent='🎤';setStatus(e.error==='not-allowed'?'Permiso de micrófono denegado.':'Error al escuchar.');};return r;}
+function toggleMic(){if(isSpeaking){window.speechSynthesis.cancel();isSpeaking=false;}if(isListening){recognition&&recognition.stop();isListening=false;return;}recognition=setupRecognition();if(!recognition){setStatus('Tu navegador no soporta voz. Usa Chrome.');return;}isListening=true;const btn=document.getElementById('mic-btn');btn.classList.add('listening');btn.textContent='⏹';try{recognition.start();}catch(e){setStatus('Error iniciando micrófono.');isListening=false;btn.classList.remove('listening');btn.textContent='🎤';}}
+async function sendChat(){const input=document.getElementById('chat-input');const text=input.value.trim();if(!text)return;input.value='';const msgs=document.getElementById('chat-messages');const ub=document.createElement('div');ub.className='msg msg-user';ub.textContent=text;msgs.appendChild(ub);const ab=document.createElement('div');ab.className='msg msg-ai';ab.textContent='...';msgs.appendChild(ab);msgs.scrollTop=msgs.scrollHeight;document.getElementById('send-btn').disabled=true;document.getElementById('mic-btn').disabled=true;try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Eres el asistente personal de Marce, estudiante de Ingeniería en Sistemas Computacionales en Teziutlán, Puebla. Eres amigable, motivadora y concisa. Tu respuesta será leída en voz alta, así que escribe de forma natural y conversacional, sin bullets, emojis ni formato especial. Máximo 3 oraciones.',messages:[{role:'user',content:text}]})});const data=await res.json();const reply=data.content?.[0]?.text||'No pude responder.';ab.textContent=reply;msgs.scrollTop=msgs.scrollHeight;speak(reply);}catch(e){ab.textContent='Error al conectar.';}document.getElementById('send-btn').disabled=false;document.getElementById('mic-btn').disabled=false;}
+window.speechSynthesis&&window.speechSynthesis.getVoices();
+</script>
+</body>
+</html>
